@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Daily Ledger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Daily intellectual habit tracker. Ten points a day.">
+<meta name="theme-color" content="#16706E">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ledger">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<main class="app">
+
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">Daily Ledger</div>
+      <h1 class="date" id="date"></h1>
+    </div>
+    <div class="streak" id="streak" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12.6 2.2c.5 3-1 4.5-2.6 6C8.2 9.8 6.5 11.5 6.5 14.4a5.5 5.5 0 0 0 11 0c0-2-.8-3.6-1.8-4.9-.3 1-1 1.9-2 2.3.6-2.7-.2-6.9-1.1-9.6z"
+              fill="currentColor"/>
+      </svg>
+      <span class="streak-count" id="streak-count">0</span>
+    </div>
+  </header>
+
+  <section class="card hero" aria-label="Today's score">
+    <div class="ladder" id="ladder" role="img" aria-label="Score ladder"></div>
+    <div class="readout">
+      <div class="score-line">
+        <span class="score" id="score">0</span>
+        <span class="of-target">/ 10</span>
+      </div>
+      <p class="status" id="status"></p>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Today's items">
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="card" aria-label="Last 14 days">
+    <div class="card-head">
+      <h2 class="card-title">Last 14 days</h2>
+      <span class="card-meta">target 10 / 12</span>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <p class="footnote">Saved on this device. One tap per item, once a day.</p>
+
+  <noscript>
+    <p class="footnote">Daily Ledger needs JavaScript: the whole ledger is computed on the device.</p>
+  </noscript>
+
+  <p class="sr-only" id="live" role="status" aria-live="polite"></p>
+
+</main>
+
+<script src="app.js"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js").catch(function () { /* offline-only is fine */ });
+    });
+  }
+</script>
+
+</body>
+</html>
