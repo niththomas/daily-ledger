@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Daily intellectual habit tracker. Ten points a day.">
 <meta name="theme-color" content="#16706E">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
@@ -34,38 +34,191 @@
     </div>
   </header>
 
-  <section class="card hero" aria-label="Today's score">
-    <div class="ladder" id="ladder" role="img" aria-label="Score ladder"></div>
-    <div class="readout">
-      <div class="score-line">
-        <span class="score" id="score">0</span>
-        <span class="of-target">/ 10</span>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" type="button" role="tab" data-view="today" aria-selected="true">Today</button>
+    <button class="tab" type="button" role="tab" data-view="calendar" aria-selected="false">Calendar</button>
+    <button class="tab" type="button" role="tab" data-view="stats" aria-selected="false">Stats</button>
+    <button class="tab" type="button" role="tab" data-view="settings" aria-selected="false">Settings</button>
+  </nav>
+
+  <div class="nudge" id="nudge" hidden>
+    <span id="nudge-text"></span>
+    <span class="nudge-actions">
+      <button type="button" data-action="nudge-open" id="nudge-open">Log it</button>
+      <button type="button" data-action="nudge-dismiss" class="nudge-dismiss" aria-label="Dismiss">Not now</button>
+    </span>
+  </div>
+
+  <!-- ------------------------------------------------------------ today -->
+  <section class="view" data-view="today" aria-label="Today">
+    <div class="card hero">
+      <div class="ladder" id="ladder" role="img" aria-label="Score ladder"></div>
+      <div class="readout">
+        <div class="score-line">
+          <span class="score" id="score">0</span>
+          <span class="of-target" id="of-target">/ 10</span>
+        </div>
+        <p class="status" id="status"></p>
       </div>
-      <p class="status" id="status"></p>
+    </div>
+
+    <div class="card">
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2 class="card-title">Last 14 days</h2>
+        <span class="card-meta" id="strip-meta"></span>
+      </div>
+      <div class="strip" id="strip"></div>
+      <p class="card-foot">Tap any day to see or fix what it holds.</p>
+    </div>
+
+    <p class="footnote">Saved on this device. One tap per item, once a day.</p>
+  </section>
+
+  <!-- --------------------------------------------------------- calendar -->
+  <section class="view" data-view="calendar" aria-label="Calendar" hidden>
+    <div class="card">
+      <div class="cal-head">
+        <button class="cal-nav" type="button" data-action="cal-prev" aria-label="Previous month">&lsaquo;</button>
+        <h2 class="cal-title" id="cal-title"></h2>
+        <button class="cal-nav" type="button" data-action="cal-next" aria-label="Next month">&rsaquo;</button>
+      </div>
+      <div class="cal-weekdays" aria-hidden="true">
+        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-summary" id="cal-summary"></div>
+      <p class="card-foot">
+        <button class="linkish" type="button" data-action="cal-today">Back to this month</button>
+      </p>
+    </div>
+    <p class="footnote">Each cell shows its score. Tap a day to edit it.</p>
+  </section>
+
+  <!-- ------------------------------------------------------------ stats -->
+  <section class="view" data-view="stats" aria-label="Statistics" hidden>
+    <div class="tiles" id="stat-tiles"></div>
+
+    <div class="card">
+      <div class="card-head"><h2 class="card-title">Summary</h2></div>
+      <div class="meta-list" id="stat-summary"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2 class="card-title">Per item</h2>
+        <span class="card-meta">last 30 days</span>
+      </div>
+      <div class="istats" id="item-stats"></div>
+      <p class="card-foot" id="item-hint"></p>
     </div>
   </section>
 
-  <section class="card" aria-label="Today's items">
-    <div class="list" id="list"></div>
-  </section>
+  <!-- --------------------------------------------------------- settings -->
+  <section class="view" data-view="settings" aria-label="Settings" hidden>
 
-  <section class="card" aria-label="Last 14 days">
-    <div class="card-head">
-      <h2 class="card-title">Last 14 days</h2>
-      <span class="card-meta">target 10 / 12</span>
+    <div class="card">
+      <div class="card-head"><h2 class="card-title">Target</h2></div>
+      <div class="setting-row">
+        <div class="stepper">
+          <button type="button" data-action="target-down" aria-label="Lower target">&minus;</button>
+          <span id="target-value">10</span>
+          <button type="button" data-action="target-up" aria-label="Raise target">+</button>
+        </div>
+        <span class="setting-note" id="target-max"></span>
+      </div>
     </div>
-    <div class="strip" id="strip"></div>
+
+    <div class="card">
+      <div class="card-head"><h2 class="card-title">Appearance</h2></div>
+      <div class="setting-row">
+        <div class="segmented">
+          <button type="button" data-theme-choice="auto">Auto</button>
+          <button type="button" data-theme-choice="light">Light</button>
+          <button type="button" data-theme-choice="dark">Dark</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2 class="card-title">Items</h2>
+        <span class="card-meta">edit, re-weight, retire</span>
+      </div>
+      <div class="items-editor" id="items-editor"></div>
+      <p class="card-foot">
+        <button class="linkish" type="button" data-action="add-item">+ Add an item</button>
+      </p>
+      <div id="archived-box" hidden>
+        <div class="card-head"><h2 class="card-title">Retired</h2></div>
+        <div class="items-editor" id="archived-list"></div>
+        <p class="card-foot">Retired items still count on the days they were logged.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2 class="card-title">Data</h2></div>
+      <p class="card-foot" id="data-summary"></p>
+      <div class="setting-row wrap">
+        <button class="btn" type="button" data-action="export-download">Download backup</button>
+        <button class="btn" type="button" data-action="export-copy">Copy as JSON</button>
+      </div>
+      <div class="setting-row wrap">
+        <label class="btn" for="import-file">Choose a backup file</label>
+        <input id="import-file" type="file" accept="application/json,.json" class="sr-only">
+      </div>
+      <label class="sr-only" for="import-text">Backup JSON</label>
+      <textarea id="import-text" class="import-text" rows="3" placeholder="…or paste backup JSON here"></textarea>
+      <div class="setting-row wrap">
+        <button class="btn" type="button" data-action="import-check">Check it</button>
+      </div>
+      <div class="import-preview" id="import-preview" hidden>
+        <p id="import-summary"></p>
+        <div class="setting-row wrap" id="import-apply" hidden>
+          <button class="btn" type="button" data-action="import-merge">Merge into mine</button>
+          <button class="btn" type="button" data-action="import-replace">Replace mine</button>
+        </div>
+      </div>
+      <div class="setting-row wrap danger">
+        <button class="btn btn-danger" type="button" data-action="erase-all">Erase everything</button>
+      </div>
+    </div>
+
+    <p class="footnote">Daily Ledger <span id="version"></span> · data never leaves this device</p>
   </section>
 
-  <p class="footnote">Saved on this device. One tap per item, once a day.</p>
+  <p class="sr-only" id="live" role="status" aria-live="polite"></p>
+  <div class="flash" id="flash" role="status" hidden></div>
 
   <noscript>
     <p class="footnote">Daily Ledger needs JavaScript: the whole ledger is computed on the device.</p>
   </noscript>
 
-  <p class="sr-only" id="live" role="status" aria-live="polite"></p>
-
 </main>
+
+<!-- ------------------------------------------------------------- sheet -->
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-date">
+    <div class="sheet-head">
+      <div>
+        <h2 class="sheet-date" id="sheet-date"></h2>
+        <div class="sheet-score">
+          <span id="sheet-score">0</span><span class="sheet-of" id="sheet-of">/ 12</span>
+          <span class="sheet-status" id="sheet-status"></span>
+        </div>
+      </div>
+      <button class="sheet-close" type="button" data-action="close-sheet" aria-label="Close">&times;</button>
+    </div>
+    <div class="list" id="sheet-list"></div>
+    <div class="sheet-ghosts" id="sheet-ghosts"></div>
+    <div class="sheet-foot">
+      <button class="linkish" type="button" data-action="clear-day" id="sheet-clear">Clear this day</button>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 <script>

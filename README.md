@@ -1,10 +1,34 @@
 # Daily Ledger
 
-An installable, offline-first PWA that tracks a daily "intellectual habit" score.
-Nine items, twelve points available, ten is the target. Single user, single
-device, no backend, no accounts, no network calls after first load.
+An installable, offline-first PWA that tracks a daily "intellectual habit"
+score. Nine items, twelve points available, ten is the target. Single user,
+single device, no backend, no accounts, no network calls after first load.
 
-Live once Pages is enabled: <https://niththomas.github.io/daily-ledger/>
+Live: <https://niththomas.github.io/daily-ledger/>
+
+## What it does
+
+**Today** — tap items on or off; the quantum ladder fills from the bottom, teal
+to target and warm gold for the two overflow levels. The 14-day strip below is
+tappable: any bar opens that day.
+
+**Calendar** — a month grid with the score printed in every cell, shaded on a
+single-hue ramp so intensity reads at a glance. A gold pip marks a perfect day.
+Tap any cell to open it. Month totals sit underneath.
+
+**Any past day is editable.** Forgetting to log before bed used to freeze a day
+wrong forever and silently truncate the streak; now you open it and fix it. If
+yesterday was never logged at all, the app says so on your next visit — a nudge
+that needs no push infrastructure.
+
+**Stats** — current streak, longest streak, at-target rate over the last 30
+days, days logged all time, average points per logged day, and a ranked
+per-item breakdown. The bottom of that list is the useful part: the habit you
+keep missing is either mis-weighted or the wrong habit.
+
+**Settings** — move the target, edit item names, notes and point values, add
+items, retire ones you've outgrown, switch theme, and export or import your
+history.
 
 ## Scoring
 
@@ -20,106 +44,110 @@ Live once Pages is enabled: <https://niththomas.github.io/daily-ledger/>
 | Sleep 8+ hours | 2 |
 | Cardio: 10k steps or 20 min | 1 |
 
-`MAX = 12`, `TARGET = 10` — so one 2-point item, or two 1-point items, can be
-missed and the day still counts. **Streak** is consecutive days at or above
-target ending today; if today is still below target the count starts at
-yesterday, so an unfinished morning never zeroes an existing streak.
+Twelve available, ten the target, so one 2-point item or two 1-point items can
+be missed and the day still counts. Both the target and the items are editable.
 
-## Stack
+**Streak** is consecutive days at or above target ending today; if today is
+still below target the count starts at yesterday, so an unfinished morning
+never zeroes a live streak.
 
-Vanilla HTML, CSS and JS. No framework, no bundler, no build step. Persistence
-is a single `localStorage` key, `ledger-history`:
+## Data
 
-```json
-{ "2026-08-20": ["book", "writing", "sleep"], "2026-08-19": ["book", "paper"] }
-```
-
-Each date maps to the checked item ids for that day. Nothing derived is stored —
-points, streak and the 14-day strip are always recomputed from this object.
-Date keys use **local** calendar components, so the day boundary is local
-midnight; a tab left open overnight rolls over on `visibilitychange`.
-
-## Files
+Three `localStorage` keys, all local to the browser that wrote them:
 
 ```
-daily-ledger/
-  index.html          # markup, head meta, service-worker registration
-  styles.css          # tokens in :root, then components
-  app.js              # ITEMS, state, compute, render, delegated click handler
-  manifest.json
-  sw.js               # cache-first app shell
-  icons/              # 192, 512, 512 maskable, apple-touch 180
+ledger-history    { "2026-08-20": ["book", "writing", "sleep"] }
+ledger-items      [{ id, label, note, points, archived? }]
+ledger-settings   { target, theme }
 ```
+
+Nothing derived is stored. Points, streaks, rates, the calendar and the strip
+are recomputed from history on every render. Date keys use **local** calendar
+components, so the day boundary is local midnight; the app rolls over both on
+`visibilitychange` and on a timer at midnight itself.
+
+Two deliberate properties:
+
+- **Retiring an item does not rewrite the past.** Archived items still score on
+  the days they were logged, and the day sheet lists them.
+- **Unreadable storage is never destroyed.** A value that won't parse is moved
+  to `<key>-unreadable` rather than dropped, and a day stored in the wrong
+  shape is repaired instead of silently miscounted.
+
+### Back it up
+
+Settings → Data → **Download backup** (or Copy as JSON). Import accepts a
+backup file or pasted JSON and offers merge or replace.
+
+Do this occasionally. Everything lives in one origin's `localStorage`: clearing
+website data, or an OS storage eviction, wipes it with no recovery. Installing
+to the home screen also makes the data more durable — Safari's 7-day cap on
+script-writable storage does not apply to installed web apps.
 
 ## Run locally
 
 Service workers need a secure context; `localhost` counts.
 
 ```bash
-cd daily-ledger
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
+## Tests
+
+57 assertions in headless Chromium — scoring, back-dating, the calendar, stats,
+import/export, storage repair, the nudge, offline behaviour, dark mode, 320px
+layout and keyboard focus.
+
+```bash
+python3 -m http.server 8000 &
+npm install playwright
+node tests/app.test.js
+```
+
+`BASE` points it at a deployed copy; `CHROME` at a browser binary if Playwright
+can't find one.
+
 ## Deploy
 
-This is a standalone repo, served as a GitHub Pages *project* site:
-
-1. Settings → Pages → Source: deploy from branch, `main`, `/ (root)`.
-2. It goes live at `https://niththomas.github.io/daily-ledger/` — a project
-   repo publishes under its own name, so this is the same URL the app had
-   when it lived in the `niththomas.github.io` repo. Anything already added
-   to a home screen keeps working.
+A GitHub Pages *project* site: Settings → Pages → deploy from branch `main`,
+`/ (root)`. A project repo publishes under its own name, so it serves at
+`https://niththomas.github.io/daily-ledger/`.
 
 On iPhone: open the URL in Safari → Share → Add to Home Screen.
 
-Every asset path is **relative** (`./`, `icons/…`, `manifest.json`), never
-root-absolute, so the app works under the Pages subpath. That is the single
-most common thing that breaks a Pages PWA.
+Every asset path is **relative** (`./`, `icons/…`), never root-absolute, so the
+app works under the Pages subpath. That is the single most common thing that
+breaks a Pages PWA.
 
-**Bump `CACHE` in `sw.js` on every deploy** (`ledger-v1` → `ledger-v2` → …) or
+**Bump `CACHE` in `sw.js` on every deploy** (`ledger-v2` → `ledger-v3` → …) or
 installed clients keep serving the old files.
 
 ## Regenerating icons
 
 ```bash
 python3 -m pip install pillow
-python3 tools/make-icons.py    # writes the four PNGs into icons/
+python3 tools/make-icons.py
 ```
 
 The apple-touch icon must stay a real opaque PNG — iOS ignores the manifest
 icons for the home-screen glyph.
 
-## Testing by hand
+## Design notes
 
-Seed some history from the console on the running app:
+Colour does one job at a time: a single teal hue carries magnitude (light to
+dark on the calendar, height on the strip), and warm gold is reserved for
+target and overflow — never a second data hue. The teal/gold pair was checked
+for colour-vision separation (ΔE 14.8 protan, 21.5 normal) so the ladder still
+reads when the hues don't. Dark mode is its own set of steps from the same hue,
+chosen against the dark surface rather than flipped.
 
-```js
-const h = {};
-const d = new Date();
-for (let i = 0; i < 6; i++) {
-  const x = new Date(d); x.setDate(x.getDate() - i);
-  const k = x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");
-  h[k] = ["book","writing","sleep","paper","cardio","explain"]; // 10 pts — at target
-}
-localStorage.setItem("ledger-history", JSON.stringify(h)); location.reload();
-```
+## Not built
 
-Checks worth running: install prompt in DevTools → Application → Manifest;
-reload with Network → Offline; toggle three items and fully quit/reopen; set
-the device date forward a day; 320px width; keyboard Tab focus rings; reduced
-motion.
-
-## Not in v1 (deliberate)
-
-- **Notifications** for the phone-free and offline-hour items. Installed PWAs
-  do support Web Push on iOS 16.4+, but it needs a push service and a
-  permission flow. Deferred.
-- **Apple Health auto-check for `cardio`.** A pure PWA cannot read HealthKit
-  step counts. This is the one feature that would justify wrapping the app
-  natively (Capacitor) or going native. Until then `cardio` is a manual tap.
-- **Editing past days, a settings screen, JSON export/import.**
-
-Later, if history grows or per-item timestamps arrive, persistence moves to
-IndexedDB with the same data shape. Cross-device sync is where an account and a
-backend would enter; per-device data is the deliberate v1 tradeoff.
+- **Web Push reminders.** Installed PWAs support them on iOS 16.4+, but it
+  needs a push service and a permission flow. The empty-yesterday nudge covers
+  the common case without any of that.
+- **Apple Health for `cardio`.** A pure PWA cannot read HealthKit step counts.
+  This is the one feature that would justify wrapping the app natively.
+- **Cross-device sync.** That is where an account and a backend enter; data
+  staying on one device is the deliberate tradeoff.

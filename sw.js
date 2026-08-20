@@ -1,5 +1,5 @@
 /* Cache-first app shell. Bump CACHE on every deploy or clients keep stale files. */
-const CACHE = "ledger-v1";
+const CACHE = "ledger-v2";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js", "./manifest.json",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-512-maskable.png",
